@@ -1,0 +1,63 @@
+name: 'Pronamic WordPress directory plugin deploy'
+description: 'Deploy release to the Pronamic plugin directory.'
+author: 'pronamic'
+
+branding:
+  icon: 'upload-cloud'
+  color: 'orange'
+
+inputs:
+  slug:
+    description: 'WordPress plugin slug.'
+    required: true
+    type: string
+  version:
+    description: 'Release version name.'
+    required: true
+    type: string
+  username:
+    description: 'Pronamic plugin directory username.'
+    required: true
+    type: string
+  password:
+    description: 'Pronamic plugin directory password.'
+    required: true
+    type: string
+  latest:
+    description: 'Deploy as "Latest"'
+    required: false
+    default: true
+    type: boolean
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Download GitHub release plugin ZIP file'
+      run: |
+        gh release download v${{ inputs.version }} --repo ${{ github.repository }} --pattern ${{ inputs.slug }}.${{ inputs.version }}.zip
+
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        project_id: 'pronamic-downloads'
+        workload_identity_provider: 'projects/623467151959/locations/global/workloadIdentityPools/github/providers/my-repo'
+
+    - name: 'Setup Google Cloud CLI'
+      uses: 'google-github-actions/setup-gcloud@v2'
+
+    - name: 'Upload to Cloud Storage'
+      run: |
+        FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
+        gcloud storage cp $FILENAME gs://wp.pronamic.download/plugins/${{ inputs.slug }}/$FILENAME
+
+    - name: 'Set latest on Cloud Storage'
+      if: ${{ inputs.latest }}
+      run: |
+        FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
+        gcloud storage cp gs://wp.pronamic.download/plugins/${{ inputs.slug }}/$FILENAME gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ inputs.slug }}.zip
+
+    - name: 'Set latest on Pronamic WordPress directory'
+      if: ${{ inputs.latest }}
+      run: |
+        curl --fail-with-body --user "pronamic:${{ secrets.WP_PRONAMIC_DIRECTORY_PASSWORD }}" --data "version=${{ inputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
