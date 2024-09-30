@@ -41,7 +41,7 @@ runs:
       shell: bash
       run: |
         FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
-        run: echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
+        echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
     - name: 'Download GitHub release plugin ZIP file'
       shell: bash
