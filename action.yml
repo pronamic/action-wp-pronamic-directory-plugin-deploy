@@ -64,4 +64,4 @@ runs:
       if: ${{ inputs.latest }}
       shell: bash
       run: |
-        curl --fail-with-body --user "pronamic:${{ secrets.WP_PRONAMIC_DIRECTORY_PASSWORD }}" --data "version=${{ inputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
+        curl --fail-with-body --user "${{ inputs.username }}:${{ inputs.password }}" --data "version=${{ inputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
