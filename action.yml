@@ -38,6 +38,7 @@ runs:
   using: 'composite'
   steps:
     - id: 'filename'
+      name: 'Determine the ZIP filename'
       shell: bash
       run: |
         FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
