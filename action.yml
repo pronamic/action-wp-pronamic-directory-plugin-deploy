@@ -11,8 +11,8 @@ inputs:
     description: 'WordPress plugin slug.'
     required: true
     type: string
-  version:
-    description: 'Release version name.'
+  tag:
+    description: 'Release tag name.'
     required: true
     type: string
   username:
@@ -33,21 +33,32 @@ outputs:
   filename:
     description: 'Filename of the plugin ZIP file.'
     value: ${{ steps.filename.outputs.filename }}
+  version:
+    description: 'Version of the plugin.'
+    value: ${{ steps.version.outputs.version }}
 
 runs:
   using: 'composite'
   steps:
+    - id: 'version'
+      name: 'Determine the version'
+      shell: bash
+      run: |
+        TAG=${{ inputs.tag }}
+        VERSION=${TAG#v}
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
     - id: 'filename'
       name: 'Determine the ZIP filename'
       shell: bash
       run: |
-        FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
+        FILENAME="${{ inputs.slug }}.${{ steps.version.outputs.version }}}.zip"
         echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
     - name: 'Download GitHub release plugin ZIP file'
       shell: bash
       run: |
-        gh release download v${{ inputs.version }} --repo ${{ github.repository }} --pattern ${{ steps.filename.outputs.filename }}
+        gh release download ${{ inputs.tag }} --repo ${{ github.repository }} --pattern ${{ steps.filename.outputs.filename }}
 
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
@@ -61,19 +72,15 @@ runs:
 
     - name: 'Upload to Cloud Storage'
       shell: bash
-      run: |
-        FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
-        gcloud storage cp $FILENAME gs://wp.pronamic.download/plugins/${{ inputs.slug }}/$FILENAME
+      run: gcloud storage cp $FILENAME gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.filename.outputs.filename }}
 
     - name: 'Set latest on Cloud Storage'
       if: ${{ inputs.latest }}
       shell: bash
-      run: |
-        FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
-        gcloud storage cp gs://wp.pronamic.download/plugins/${{ inputs.slug }}/$FILENAME gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ inputs.slug }}.zip
+      run: gcloud storage cp gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.filename.outputs.filename }} gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ inputs.slug }}.zip
 
     - name: 'Set latest on Pronamic WordPress directory'
       if: ${{ inputs.latest }}
       shell: bash
       run: |
-        curl --fail-with-body --user "${{ inputs.username }}:${{ inputs.password }}" --data "version=${{ inputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
+        curl --fail-with-body --user "${{ inputs.username }}:${{ inputs.password }}" --data "version=${{ steps.version.outputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
