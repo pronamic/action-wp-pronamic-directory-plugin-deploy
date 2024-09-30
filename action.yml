@@ -52,7 +52,7 @@ runs:
       name: 'Determine the ZIP filename'
       shell: bash
       run: |
-        FILENAME="${{ inputs.slug }}.${{ steps.version.outputs.version }}}.zip"
+        FILENAME="${{ inputs.slug }}.${{ steps.version.outputs.version }}.zip"
         echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
 
     - name: 'Download GitHub release plugin ZIP file'
