@@ -46,12 +46,14 @@ runs:
         TAG=${{ inputs.tag }}
         VERSION=${TAG#v}
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      shell: bash
 
     - id: 'filename'
       name: 'Determine the ZIP filename'
       run: |
         FILENAME="${{ inputs.slug }}.${{ steps.version.outputs.version }}.zip"
         echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
+      shell: bash
 
     - name: 'Download GitHub release plugin ZIP file'
       shell: bash
