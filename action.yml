@@ -33,6 +33,7 @@ runs:
   using: 'composite'
   steps:
     - name: 'Download GitHub release plugin ZIP file'
+      shell: bash
       run: |
         gh release download v${{ inputs.version }} --repo ${{ github.repository }} --pattern ${{ inputs.slug }}.${{ inputs.version }}.zip
 
@@ -47,17 +48,20 @@ runs:
       uses: 'google-github-actions/setup-gcloud@v2'
 
     - name: 'Upload to Cloud Storage'
+      shell: bash
       run: |
         FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
         gcloud storage cp $FILENAME gs://wp.pronamic.download/plugins/${{ inputs.slug }}/$FILENAME
 
     - name: 'Set latest on Cloud Storage'
       if: ${{ inputs.latest }}
+      shell: bash
       run: |
         FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
         gcloud storage cp gs://wp.pronamic.download/plugins/${{ inputs.slug }}/$FILENAME gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ inputs.slug }}.zip
 
     - name: 'Set latest on Pronamic WordPress directory'
       if: ${{ inputs.latest }}
+      shell: bash
       run: |
         curl --fail-with-body --user "pronamic:${{ secrets.WP_PRONAMIC_DIRECTORY_PASSWORD }}" --data "version=${{ inputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
