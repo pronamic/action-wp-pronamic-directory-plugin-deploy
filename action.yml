@@ -24,18 +24,29 @@ inputs:
     required: true
     type: string
   latest:
-    description: 'Deploy as "Latest"'
+    description: 'Deploy as "Latest".'
     required: false
     default: true
     type: boolean
 
+outputs:
+  filename:
+    description: 'Filename of the plugin ZIP file.'
+    value: ${{ steps.filename.outputs.filename }}
+
 runs:
   using: 'composite'
   steps:
+    - id: 'filename'
+      shell: bash
+      run: |
+        FILENAME="${{ inputs.slug }}.${{ inputs.version }}.zip"
+        run: echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
+
     - name: 'Download GitHub release plugin ZIP file'
       shell: bash
       run: |
-        gh release download v${{ inputs.version }} --repo ${{ github.repository }} --pattern ${{ inputs.slug }}.${{ inputs.version }}.zip
+        gh release download v${{ inputs.version }} --repo ${{ github.repository }} --pattern ${{ steps.filename.outputs.filename }}
 
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
