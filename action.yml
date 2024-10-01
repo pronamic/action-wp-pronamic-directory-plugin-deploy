@@ -28,6 +28,10 @@ inputs:
     required: false
     default: true
     type: boolean
+  github-token:
+    description: 'GitHub token.'
+    required: false
+    default: ${{ github.token }}
 
 outputs:
   filename:
@@ -59,6 +63,8 @@ runs:
       shell: bash
       run: |
         gh release download ${{ inputs.tag }} --repo ${{ github.repository }} --pattern ${{ steps.filename.outputs.filename }}
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
 
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
