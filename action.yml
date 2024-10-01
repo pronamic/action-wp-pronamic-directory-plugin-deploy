@@ -59,14 +59,12 @@ runs:
         echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
       shell: bash
 
-    - name: "Authenticate GitHub CLI"
-      shell: bash
-      run: echo "${{ inputs.github-token }}" | gh auth login --with-token
-
     - name: 'Download GitHub release plugin ZIP file'
       shell: bash
       run: |
         gh release download ${{ inputs.tag }} --repo ${{ github.repository }} --pattern ${{ steps.filename.outputs.filename }}
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
 
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
