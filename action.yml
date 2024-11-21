@@ -42,25 +42,6 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Check value
-      run: |
-        echo "The value is: $FOO"
-      shell: bash
-      env:
-        FOO: ${{ inputs.latest }}
-
-    - name: Run if foo
-      if: ${{ github.event.inputs.foo }}
-      run: |
-        echo "Foo!"
-      shell: bash
-
-    - name: Run if not foo
-      if: ${{ ! github.event.inputs.foo }}
-      run: |
-        echo "Foo!"
-      shell: bash
-
     - id: 'version'
       name: 'Determine the version'
       run: |
@@ -74,6 +55,16 @@ runs:
       run: |
         FILENAME="${{ inputs.slug }}.${{ steps.version.outputs.version }}.zip"
         echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - id: 'latest'
+      name: 'Determine latest'
+      run: |
+        if [[ -z "${{ inputs.latest }}" ]]
+          echo "Inputs latest is empty string"
+        else
+          echo "Inputs latest: ${{ inputs.latest }}"
+        fi
       shell: bash
 
     - name: 'Download GitHub release plugin ZIP file'
