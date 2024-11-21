@@ -59,6 +59,9 @@ runs:
 
     - id: 'latest'
       name: 'Determine latest'
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      shell: bash
       run: |
         LATEST="${{ inputs.latest }}"
 
@@ -71,14 +74,13 @@ runs:
         fi
 
         echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
-      shell: bash
 
     - name: 'Download GitHub release plugin ZIP file'
+      env:
+        GH_TOKEN: ${{ inputs.token }}
       shell: bash
       run: |
         gh release download ${{ inputs.tag }} --repo ${{ github.repository }} --pattern ${{ steps.filename.outputs.filename }}
-      env:
-        GH_TOKEN: ${{ inputs.token }}
 
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
