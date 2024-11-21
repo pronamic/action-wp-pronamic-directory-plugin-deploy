@@ -60,11 +60,17 @@ runs:
     - id: 'latest'
       name: 'Determine latest'
       run: |
-        if [[ -z "${{ inputs.latest }}" ]]; then
-          echo "Inputs latest is empty string"
-        else
-          echo "Inputs latest: ${{ inputs.latest }}"
+        LATEST="${{ inputs.latest }}"
+
+        if [[ "$LATEST" == "" ]]; then
+          LATEST_RELEASE_TAG_NAME=$(gh repo view ${{ github.repository }} --json latestRelease --jq .latestRelease.tagName)
+
+          if [[ "$LATEST_RELEASE_TAG_NAME" == "${{ inputs.tag }}" ]]; then
+            LATEST="true"
+          fi
         fi
+
+        echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
       shell: bash
 
     - name: 'Download GitHub release plugin ZIP file'
@@ -89,12 +95,12 @@ runs:
       run: gcloud storage cp ${{ steps.filename.outputs.filename }} gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.filename.outputs.filename }}
 
     - name: 'Set latest on Cloud Storage'
-      if: ${{ inputs.latest }}
+      if: ${{ steps.latest.outputs.latest }}
       shell: bash
       run: gcloud storage cp gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.filename.outputs.filename }} gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ inputs.slug }}.zip
 
     - name: 'Set latest on Pronamic WordPress directory'
-      if: ${{ inputs.latest }}
+      if: ${{ steps.latest.outputs.latest }}
       shell: bash
       run: |
         curl --fail-with-body --user "${{ inputs.username }}:${{ inputs.password }}" --data "version=${{ steps.version.outputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
