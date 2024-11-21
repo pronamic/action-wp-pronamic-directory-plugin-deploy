@@ -41,11 +41,24 @@ outputs:
 
 runs:
   using: 'composite'
+  env:
+    FOO: ${{ inputs.latest }}
   steps:
-    - id: 'wip-latest'
-      name: 'Check latest'
-      if: ${{ inputs.latest == null }}
-      run: echo "latest is null"
+    - name: Check value
+      run: |
+        echo "The value is: $FOO"
+      shell: bash
+
+    - name: Run if foo
+      if: ${{ github.event.inputs.foo }}
+      run: |
+        echo "Foo!"
+      shell: bash
+
+    - name: Run if not foo
+      if: ${{ ! github.event.inputs.foo }}
+      run: |
+        echo "Foo!"
       shell: bash
 
     - id: 'version'
