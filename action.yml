@@ -46,6 +46,7 @@ runs:
       name: 'Check latest'
       if: ${{ inputs.latest == null }}
       run: echo "latest is null"
+      shell: bash
 
     - id: 'version'
       name: 'Determine the version'
