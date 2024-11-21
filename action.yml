@@ -41,13 +41,13 @@ outputs:
 
 runs:
   using: 'composite'
-  env:
-    FOO: ${{ inputs.latest }}
   steps:
     - name: Check value
       run: |
         echo "The value is: $FOO"
       shell: bash
+      env:
+        FOO: ${{ inputs.latest }}
 
     - name: Run if foo
       if: ${{ github.event.inputs.foo }}
