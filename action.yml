@@ -60,7 +60,7 @@ runs:
     - id: 'latest'
       name: 'Determine latest'
       run: |
-        if [[ -z "${{ inputs.latest }}" ]]
+        if [[ -z "${{ inputs.latest }}" ]]; then
           echo "Inputs latest is empty string"
         else
           echo "Inputs latest: ${{ inputs.latest }}"
