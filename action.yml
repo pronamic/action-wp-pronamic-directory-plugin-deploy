@@ -11,10 +11,6 @@ inputs:
     description: 'WordPress plugin slug.'
     required: true
     type: string
-  tag:
-    description: 'Release tag name.'
-    required: true
-    type: string
   username:
     description: 'Pronamic plugin directory username.'
     required: true
@@ -23,8 +19,13 @@ inputs:
     description: 'Pronamic plugin directory password.'
     required: true
     type: string
+  tag:
+    description: 'Release tag name.'
+    required: false
+    type: string
   latest:
     description: 'Deploy as "Latest".'
+    required: false
     type: boolean
   token:
     description: 'GitHub token.'
