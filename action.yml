@@ -77,7 +77,6 @@ runs:
         echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
         echo "tag=$TAG" >> "$GITHUB_OUTPUT"
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      shell: bash
 
     - name: 'Download GitHub release plugin ZIP file'
       env:
