@@ -67,7 +67,7 @@ runs:
 
         LATEST="${{ inputs.latest }}"
 
-        if [[ "$LATEST" == "" && "$LATEST_RELEASE_TAG_NAME" == "${{ inputs.tag }}" ]]; then
+        if [[ "$LATEST" == "" && "$LATEST_RELEASE_TAG_NAME" == "$TAG" ]]; then
           LATEST="true"
         fi
 
