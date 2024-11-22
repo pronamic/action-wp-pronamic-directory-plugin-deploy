@@ -83,7 +83,7 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
       shell: bash
       run: |
-        gh release download ${{ inputs.tag }} --repo ${{ github.repository }} --pattern ${{ steps.prepare.outputs.filename }}
+        gh release download ${{ steps.prepare.outputs.tag }} --repo ${{ github.repository }} --pattern ${{ steps.prepare.outputs.filename }}
 
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
