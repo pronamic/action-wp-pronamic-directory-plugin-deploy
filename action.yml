@@ -100,12 +100,12 @@ runs:
       run: gcloud storage cp ${{ steps.prepare.outputs.filename }} gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.prepare.outputs.filename }}
 
     - name: 'Set latest on Cloud Storage'
-      if: ${{ steps.latest.outputs.latest }}
+      if: ${{ steps.prepare.outputs.latest }}
       shell: bash
       run: gcloud storage cp gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.prepare.outputs.filename }} gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ inputs.slug }}.zip
 
     - name: 'Set latest on Pronamic WordPress directory'
-      if: ${{ steps.latest.outputs.latest }}
+      if: ${{ steps.prepare.outputs.latest }}
       shell: bash
       run: |
         curl --fail-with-body --user "${{ inputs.username }}:${{ inputs.password }}" --data "version=${{ steps.prepare.outputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
