@@ -34,53 +34,56 @@ inputs:
 outputs:
   filename:
     description: 'Filename of the plugin ZIP file.'
-    value: ${{ steps.filename.outputs.filename }}
+    value: ${{ steps.prepare.outputs.filename }}
+  latest:
+    description: 'Indicates whether the release is marked as the latest.'
+    value: ${{ steps.prepare.outputs.latest }}
+  tag:
+    description: 'Release tag name.'
+    value: ${{ steps.prepare.outputs.tag }}
   version:
     description: 'Version of the plugin.'
-    value: ${{ steps.version.outputs.version }}
+    value: ${{ steps.prepare.outputs.version }}
 
 runs:
   using: 'composite'
   steps:
-    - id: 'version'
-      name: 'Determine the version'
-      run: |
-        TAG=${{ inputs.tag }}
-        VERSION=${TAG#v}
-        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      shell: bash
-
-    - id: 'filename'
-      name: 'Determine the ZIP filename'
-      run: |
-        FILENAME="${{ inputs.slug }}.${{ steps.version.outputs.version }}.zip"
-        echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
-      shell: bash
-
-    - id: 'latest'
-      name: 'Determine latest'
+    - id: 'prepare'
+      name: 'Prepare'
       env:
         GH_TOKEN: ${{ inputs.token }}
       shell: bash
       run: |
-        LATEST="${{ inputs.latest }}"
+        LATEST_RELEASE_TAG_NAME=$(gh repo view ${{ github.repository }} --json latestRelease --jq .latestRelease.tagName)
 
-        if [[ "$LATEST" == "" ]]; then
-          LATEST_RELEASE_TAG_NAME=$(gh repo view ${{ github.repository }} --json latestRelease --jq .latestRelease.tagName)
+        TAG=${{ inputs.tag }}
 
-          if [[ "$LATEST_RELEASE_TAG_NAME" == "${{ inputs.tag }}" ]]; then
-            LATEST="true"
-          fi
+        if [[ "$TAG" == "" ]]; then
+          TAG="$LATEST_RELEASE_TAG_NAME"
         fi
 
+        VERSION=${TAG#v}
+
+        LATEST="${{ inputs.latest }}"
+
+        if [[ "$LATEST" == "" && "$LATEST_RELEASE_TAG_NAME" == "${{ inputs.tag }}" ]]; then
+          LATEST="true"
+        fi
+
+        FILENAME="${{ inputs.slug }}.$VERSION.zip"
+
+        echo "filename=$FILENAME" >> "$GITHUB_OUTPUT"
         echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+        echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      shell: bash
 
     - name: 'Download GitHub release plugin ZIP file'
       env:
         GH_TOKEN: ${{ inputs.token }}
       shell: bash
       run: |
-        gh release download ${{ inputs.tag }} --repo ${{ github.repository }} --pattern ${{ steps.filename.outputs.filename }}
+        gh release download ${{ inputs.tag }} --repo ${{ github.repository }} --pattern ${{ steps.prepare.outputs.filename }}
 
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
@@ -94,15 +97,15 @@ runs:
 
     - name: 'Upload to Cloud Storage'
       shell: bash
-      run: gcloud storage cp ${{ steps.filename.outputs.filename }} gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.filename.outputs.filename }}
+      run: gcloud storage cp ${{ steps.prepare.outputs.filename }} gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.prepare.outputs.filename }}
 
     - name: 'Set latest on Cloud Storage'
       if: ${{ steps.latest.outputs.latest }}
       shell: bash
-      run: gcloud storage cp gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.filename.outputs.filename }} gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ inputs.slug }}.zip
+      run: gcloud storage cp gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ steps.prepare.outputs.filename }} gs://wp.pronamic.download/plugins/${{ inputs.slug }}/${{ inputs.slug }}.zip
 
     - name: 'Set latest on Pronamic WordPress directory'
       if: ${{ steps.latest.outputs.latest }}
       shell: bash
       run: |
-        curl --fail-with-body --user "${{ inputs.username }}:${{ inputs.password }}" --data "version=${{ steps.version.outputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
+        curl --fail-with-body --user "${{ inputs.username }}:${{ inputs.password }}" --data "version=${{ steps.prepare.outputs.version }}" --request PATCH https://wp.pronamic.directory/wp-json/pronamic-wp-extensions/v1/plugins/${{ inputs.slug }}
